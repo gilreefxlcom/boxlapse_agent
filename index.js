@@ -1,8 +1,11 @@
 import io from "socket.io-client";
+import os from "os";
+import { spawn } from "child_process";
 const socket = io.connect("http://boxlapse.ddns.net:4000");
 
-console.log("Start");
-var hostName = "boxlapse1";
+var hostName = os.hostname();
+//var hostName = "boxlapse1";
+console.log(`Started with ${hostName}`);
 
 socket.on("connect", () => {
   console.log("On Connect");
@@ -18,6 +21,7 @@ socket.on("takePicture", () => {
   console.log("Got Message to take picture");
   //run script to take picture
   const url = "bla";
+  takePicture()
   socket.emit("PictureOK", url);
 });
 
@@ -25,51 +29,30 @@ socket.on("setConfiguration", (boxJSON) => {
   console.log(`Received update from server:setConfiguration: ${boxJSON}`);
   socket.emit("setConfiguration", `setConfiguration Received by ${hostName}`);
   const startHour = boxJSON.startHour;
-  const startMinute = boxJSON.startHour;
+  const startMinute = boxJSON.startMinute;
   const endHour = boxJSON.endHour;
   const endMinute = boxJSON.endMinute;
   const interval = boxJSON.interval;
   const activeDays = boxJSON.activeDays;
 
-  updateConfiguration(
-    startHour,
-    startMinute,
-    endHour,
-    endMinute,
-    interval,
-    activeDays
-  );
+  updateConfiguration(startHour, startMinute, endHour, endMinute, interval, activeDays);
 });
 
 function takePicture() {
   console.log("Taking a picture");
+  const child = spawn('/home/pi/upload_cron.sh');
 }
 
 socket.on("error", (err) => {
   console.log(err);
 });
 
-const DAYS_STRS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+const DAYS_STRS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 function dayNumToStr(dayNum) {
   return DAYS_STRS[dayNum % 7];
 }
 
-function fillActions(
-  startHour,
-  startMinute,
-  endHour,
-  endMinute,
-  interval,
-  activeDays
-) {
+function fillActions(startHour, startMinute, endHour, endMinute, interval, activeDays) {
   const startMinuteOfTheDay = startHour * 60 + startMinute;
   const endMinuteOfTheDay = endHour * 60 + endMinute;
   if (startMinuteOfTheDay > endMinuteOfTheDay) {
@@ -77,16 +60,12 @@ function fillActions(
   }
 
   const result = [[], [], [], [], [], [], []];
-  if (!activeDays){
+  if (!activeDays) {
     return result;
   }
   for (let i = 0; i < activeDays.length; i++) {
     if (activeDays[i]) {
-      for (
-        let t = startMinuteOfTheDay;
-        t <= endMinuteOfTheDay;
-        t = t + interval
-      ) {
+      for (let t = startMinuteOfTheDay; t <= endMinuteOfTheDay; t = t + interval) {
         result[i].push(t);
       }
     }
@@ -101,6 +80,7 @@ function validateActionByDay(actionsByDays) {
 function getMinutesToWait(actionsByDays) {
   if (validateActionByDay(actionsByDays) === false) {
     throw new Error("No actions found");
+    console.log("No actions found");
   }
 
   const now = new Date();
@@ -114,20 +94,21 @@ function getMinutesToWait(actionsByDays) {
   let idx = 0;
   let daysToAdd = 0;
   while (!found) {
+    //console.log(found)
     const targetDay = (currentDayOfTheWeek + daysToAdd) % 7;
     const dayActions = actionsByDays[targetDay];
-    if (dayActions.length < idx) {
+    if (dayActions.length - 1 < idx) {
       daysToAdd++;
       idx = 0;
     } else {
       const targetMinuteOfTheDay = dayActions[idx];
-      if (targetMinuteOfTheDay > currentMinuteOfTheDay) {
+      if (targetMinuteOfTheDay > currentMinuteOfTheDay || daysToAdd > 0) {
         found = true;
-        const minutesToWait =
-          targetMinuteOfTheDay - currentMinuteOfTheDay + daysToAdd * 24 * 60;
+        const minutesToWait = targetMinuteOfTheDay - currentMinuteOfTheDay + daysToAdd * 24 * 60;
         console.log(`daysToAdd: ${daysToAdd}`);
         console.log(`targetDay: ${dayNumToStr(targetDay)}`);
         console.log(`targetMinuteOfTheDay: ${targetMinuteOfTheDay}`);
+        console.log(`actionsPerDay: ${dayActions.length}`);
         return minutesToWait;
       } else {
         idx++;
@@ -138,23 +119,9 @@ function getMinutesToWait(actionsByDays) {
 
 let actionsByDays;
 let setTimeoutId;
-function updateConfiguration(
-  startHour,
-  startMinute,
-  endHour,
-  endMinute,
-  interval,
-  activeDays
-) {
+function updateConfiguration(startHour, startMinute, endHour, endMinute, interval, activeDays) {
   // load configuration
-  actionsByDays = fillActions(
-    startHour,
-    startMinute,
-    endHour,
-    endMinute,
-    interval,
-    activeDays
-  );
+  actionsByDays = fillActions(startHour, startMinute, endHour, endMinute, interval, activeDays);
   console.log(actionsByDays);
   console.log(`Interval is ===> ${interval}`);
   work();
