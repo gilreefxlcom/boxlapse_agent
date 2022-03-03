@@ -1,3 +1,4 @@
+import fs from "fs";
 import io from "socket.io-client";
 import os, { hostname } from "os";
 import { spawn } from "child_process";
@@ -9,6 +10,26 @@ if (hostName != "video") {
 } else hostName = "boxlapse1";
 
 console.log(`Started with ${hostName}`);
+
+socket.on("connect_error", (err) => {
+  console.log(`connect_error due to ${err.message}`);
+  console.log(`Reading JSON from file`);
+  fs.readFile("box.json", "utf8", (err, box) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    const boxJSON = JSON.parse(box);
+    console.log(boxJSON);
+    const startHour = boxJSON.startHour;
+    const startMinute = boxJSON.startMinute;
+    const endHour = boxJSON.endHour;
+    const endMinute = boxJSON.endMinute;
+    const interval = boxJSON.interval;
+    const activeDays = boxJSON.activeDays;
+    updateConfiguration(startHour, startMinute, endHour, endMinute, interval, activeDays);
+  });
+});
 
 socket.on("connect", () => {
   console.log("On Connect");
@@ -31,13 +52,20 @@ socket.on("takePicture", () => {
 socket.on("setConfiguration", (boxJSON) => {
   console.log(`Received update from server:setConfiguration: ${boxJSON}`);
   socket.emit("setConfiguration", `setConfiguration Received by ${hostName}`);
+  const content = JSON.stringify(boxJSON, null, 2);
+  fs.writeFile("box.json", content, (err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    console.log(`JSON was written to file`);
+  });
   const startHour = boxJSON.startHour;
   const startMinute = boxJSON.startMinute;
   const endHour = boxJSON.endHour;
   const endMinute = boxJSON.endMinute;
   const interval = boxJSON.interval;
   const activeDays = boxJSON.activeDays;
-
   updateConfiguration(startHour, startMinute, endHour, endMinute, interval, activeDays);
 });
 

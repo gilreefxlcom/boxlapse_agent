@@ -1,0 +1,19 @@
+{
+  "userId": "boxlapse1",
+  "userName": "BOXLAPSE 1",
+  "interval": 10,
+  "startHour": 10,
+  "startMinute": 0,
+  "endHour": 22,
+  "endMinute": 0,
+  "activeDays": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    false,
+    false
+  ],
+  "connected": false
+}
