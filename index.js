@@ -6,7 +6,7 @@ const socket = io.connect("http://boxlapse.ddns.net:4000");
 var hostName = os.hostname();
 if (hostName != "video") {
   var hostName = os.hostname();
-} else hostName = "boxlapseDosktop";
+} else hostName = "boxlapse1";
 
 console.log(`Started with ${hostName}`);
 
