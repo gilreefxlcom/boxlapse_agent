@@ -1,10 +1,13 @@
 import io from "socket.io-client";
-import os from "os";
+import os, { hostname } from "os";
 import { spawn } from "child_process";
 const socket = io.connect("http://boxlapse.ddns.net:4000");
 
 var hostName = os.hostname();
-//var hostName = "boxlapse1";
+if (hostName != "video") {
+  var hostName = os.hostname();
+} else hostName = "boxlapseDosktop";
+
 console.log(`Started with ${hostName}`);
 
 socket.on("connect", () => {
@@ -21,7 +24,7 @@ socket.on("takePicture", () => {
   console.log("Got Message to take picture");
   //run script to take picture
   const url = "bla";
-  takePicture()
+  takePicture();
   socket.emit("PictureOK", url);
 });
 
@@ -40,7 +43,7 @@ socket.on("setConfiguration", (boxJSON) => {
 
 function takePicture() {
   console.log("Taking a picture");
-  const child = spawn('/home/pi/upload_cron.sh');
+  const child = spawn("/home/pi/upload_cron.sh");
 }
 
 socket.on("error", (err) => {
