@@ -45,7 +45,7 @@ socket.on("takePicture", () => {
   console.log("Got Message to take picture");
   //run script to take picture
   const url = "bla";
-  takePicture();
+  takePicture(url);
   socket.emit("PictureOK", url);
 });
 
@@ -69,7 +69,7 @@ socket.on("setConfiguration", (boxJSON) => {
   updateConfiguration(startHour, startMinute, endHour, endMinute, interval, activeDays);
 });
 
-function takePicture() {
+function takePicture(url) {
   console.log("Taking a picture");
   const child = spawn("/home/pi/upload_cron.sh");
 }
@@ -165,6 +165,7 @@ function work() {
   const msToWait = minutesToWait * 60000 - seconds;
   console.log(`minutesToWait ===> ${minutesToWait}`);
   console.log(`msToWait ===> ${msToWait}`);
+  console.log(`hostName ===> ${hostName}`);
   console.log(now);
 
   function onTimer() {
