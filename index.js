@@ -1,7 +1,7 @@
 import fs from "fs";
 import io from "socket.io-client";
 import os, { hostname } from "os";
-import { spawn } from "child_process";
+import { spawn, execSync } from "child_process";
 const socket = io.connect("http://boxlapse.ddns.net:4000");
 
 var hostName = os.hostname();
@@ -10,26 +10,6 @@ if (hostName != "video") {
 } else hostName = "boxlapse1";
 
 console.log(`Started with ${hostName}`);
-
-socket.on("connect_error", (err) => {
-  console.log(`connect_error due to ${err.message}`);
-  console.log(`Reading JSON from file`);
-  fs.readFile("box.json", "utf8", (err, box) => {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    const boxJSON = JSON.parse(box);
-    console.log(boxJSON);
-    const startHour = boxJSON.startHour;
-    const startMinute = boxJSON.startMinute;
-    const endHour = boxJSON.endHour;
-    const endMinute = boxJSON.endMinute;
-    const interval = boxJSON.interval;
-    const activeDays = boxJSON.activeDays;
-    updateConfiguration(startHour, startMinute, endHour, endMinute, interval, activeDays);
-  });
-});
 
 socket.on("connect", () => {
   console.log("On Connect");
@@ -43,9 +23,8 @@ socket.on("disconnect", () => {
 
 socket.on("takePicture", () => {
   console.log("Got Message to take picture");
-  //run script to take picture
-  const url = "bla";
-  takePicture(url);
+  const url = takePictureDO();
+  console.log(`URL is: ${url}`);
   socket.emit("PictureOK", url);
 });
 
@@ -69,9 +48,33 @@ socket.on("setConfiguration", (boxJSON) => {
   updateConfiguration(startHour, startMinute, endHour, endMinute, interval, activeDays);
 });
 
-function takePicture(url) {
+function takePicture() {
   console.log("Taking a picture");
   const child = spawn("/home/pi/upload_cron.sh");
+}
+
+function takePictureDO() {
+  console.log("Taking a picture DO");
+  var d = new Date();
+  var datestring =
+    ("0" + d.getDate()).slice(-2) +
+    "-" +
+    ("0" + (d.getMonth() + 1)).slice(-2) +
+    "-" +
+    d.getFullYear() +
+    "T" +
+    ("0" + d.getHours()).slice(-2) +
+    ":" +
+    ("0" + d.getMinutes()).slice(-2) +
+    ":" +
+    ("0" + d.getSeconds()).slice(-2);
+  var cmdPre = "/home/pi/takepictureDO.sh ";
+  var cmd = cmdPre.concat(datestring);
+  console.log(`runngin command => ${cmd}`);
+  var urlPre = "https://highlapse.fra1.digitaloceanspaces.com/boxlapse6/takePicture/";
+  var url = urlPre.concat(datestring, ".cr2.jpg");
+  const child = execSync(cmd);
+  return url;
 }
 
 socket.on("error", (err) => {
@@ -165,7 +168,6 @@ function work() {
   const msToWait = minutesToWait * 60000 - seconds;
   console.log(`minutesToWait ===> ${minutesToWait}`);
   console.log(`msToWait ===> ${msToWait}`);
-  console.log(`hostName ===> ${hostName}`);
   console.log(now);
 
   function onTimer() {
