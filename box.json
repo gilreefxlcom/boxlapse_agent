@@ -1,19 +1,20 @@
 {
   "userId": "boxlapse1",
   "userName": "BOXLAPSE 1",
-  "interval": 10,
-  "startHour": 10,
+  "interval": 30,
+  "startHour": 0,
   "startMinute": 0,
-  "endHour": 22,
-  "endMinute": 0,
+  "endHour": 23,
+  "endMinute": 55,
   "activeDays": [
     true,
     true,
     true,
     true,
     true,
-    false,
-    false
+    true,
+    true
   ],
-  "connected": false
+  "connected": "Down",
+  "connectedBool": false
 }
