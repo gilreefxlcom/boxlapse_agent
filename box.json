@@ -1,6 +1,6 @@
 {
-  "userId": "boxlapse1",
-  "userName": "BOXLAPSE 1",
+  "userId": "boxlapseX",
+  "userName": "BOXLAPSE X",
   "interval": 30,
   "startHour": 0,
   "startMinute": 0,
@@ -15,6 +15,5 @@
     true,
     true
   ],
-  "connected": "Down",
-  "connectedBool": false
+  "connected": "Down"
 }

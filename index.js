@@ -4,10 +4,9 @@ import os, { hostname } from "os";
 import { spawn, execSync } from "child_process";
 const socket = io.connect("http://boxlapse.ddns.net:4000");
 
-var hostName = os.hostname();
-if (hostName != "video") {
+if (os.hostname() != "video") {
   var hostName = os.hostname();
-} else hostName = "boxlapse1";
+} else hostName = "boxlapseX";
 
 console.log(`Started with ${hostName}`);
 
@@ -50,31 +49,35 @@ socket.on("setConfiguration", (boxJSON) => {
 
 function takePicture() {
   console.log("Taking a picture");
-  const child = spawn("/home/pi/upload_cron.sh");
+  if (hostName != "boxlapseX") {
+    const child = spawn("/home/pi/upload_cron.sh");
+  }
 }
 
 function takePictureDO() {
   console.log("Taking a picture DO");
-  var d = new Date();
-  var datestring =
-    ("0" + d.getDate()).slice(-2) +
-    "-" +
-    ("0" + (d.getMonth() + 1)).slice(-2) +
-    "-" +
-    d.getFullYear() +
-    "T" +
-    ("0" + d.getHours()).slice(-2) +
-    ":" +
-    ("0" + d.getMinutes()).slice(-2) +
-    ":" +
-    ("0" + d.getSeconds()).slice(-2);
-  var cmdPre = "/home/pi/takepictureDO.sh ";
-  var cmd = cmdPre.concat(datestring);
-  console.log(`runngin command => ${cmd}`);
-  var urlPre = "https://highlapse.fra1.digitaloceanspaces.com/boxlapse6/takePicture/";
-  var url = urlPre.concat(datestring, ".cr2.jpg");
-  const child = execSync(cmd);
-  return url;
+  if (hostName != "boxlapseX") {
+    var d = new Date();
+    var datestring =
+      ("0" + d.getDate()).slice(-2) +
+      "-" +
+      ("0" + (d.getMonth() + 1)).slice(-2) +
+      "-" +
+      d.getFullYear() +
+      "T" +
+      ("0" + d.getHours()).slice(-2) +
+      ":" +
+      ("0" + d.getMinutes()).slice(-2) +
+      ":" +
+      ("0" + d.getSeconds()).slice(-2);
+    var cmdPre = "/home/pi/takepictureDO.sh ";
+    var cmd = cmdPre.concat(datestring);
+    console.log(`runngin command => ${cmd}`);
+    var urlPre = "https://highlapse.fra1.digitaloceanspaces.com/boxlapse6/takePicture/";
+    var url = urlPre.concat(datestring, ".cr2.jpg");
+    const child = execSync(cmd);
+    return url;
+  }
 }
 
 socket.on("error", (err) => {
