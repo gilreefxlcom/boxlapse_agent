@@ -111,13 +111,12 @@ function fillActions(startHour, startMinute, endHour, endMinute, interval, activ
 }
 
 function validateActionByDay(actionsByDays) {
-  return actionsByDays.some((actions) => actions.length >= 0);
+  return actionsByDays.some((actions) => actions.length > 0);
 }
 
 function getMinutesToWait(actionsByDays) {
   if (validateActionByDay(actionsByDays) === false) {
-    throw new Error("No actions found");
-    console.log("No actions found");
+    return null;
   }
 
   const now = new Date();
@@ -165,9 +164,15 @@ function updateConfiguration(startHour, startMinute, endHour, endMinute, interva
 }
 
 function work() {
+  if (setTimeoutId) {
+    clearTimeout(setTimeoutId);
+  }
   const now = new Date();
   const seconds = now.getSeconds() * 1000;
   const minutesToWait = getMinutesToWait(actionsByDays);
+  if (minutesToWait === null) {
+    return
+  }
   const msToWait = minutesToWait * 60000 - seconds;
   console.log(`minutesToWait ===> ${minutesToWait}`);
   console.log(`msToWait ===> ${msToWait}`);
@@ -176,10 +181,6 @@ function work() {
   function onTimer() {
     takePicture();
     work();
-  }
-
-  if (setTimeoutId) {
-    clearTimeout(setTimeoutId);
   }
   setTimeoutId = setTimeout(onTimer, msToWait);
 }
