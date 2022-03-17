@@ -2,6 +2,7 @@ import fs from "fs";
 import io from "socket.io-client";
 import os, { hostname } from "os";
 import { spawn, execSync } from "child_process";
+import { load } from "nodemon/lib/config";
 const socket = io.connect("http://boxlapse.ddns.net:4000");
 
 if (os.hostname() != "video") {
@@ -9,6 +10,8 @@ if (os.hostname() != "video") {
 } else hostName = "boxlapseX";
 
 console.log(`Started with ${hostName}`);
+
+var loadConfig = true;
 
 socket.on("connect", () => {
   console.log("On Connect");
@@ -31,13 +34,14 @@ socket.on("setConfiguration", (boxJSON) => {
   console.log(`Received update from server:setConfiguration: ${boxJSON}`);
   socket.emit("setConfiguration", `setConfiguration Received by ${hostName}`);
   const content = JSON.stringify(boxJSON, null, 2);
-  fs.writeFile("box.json", content, (err) => {
+  fs.writeFile("/home/pi/Documents/boxlapse_agent/box.json", content, (err) => {
     if (err) {
       console.error(err);
       return;
     }
     console.log(`JSON was written to file`);
   });
+  loadConfig = false;
   const startHour = boxJSON.startHour;
   const startMinute = boxJSON.startMinute;
   const endHour = boxJSON.endHour;
@@ -45,6 +49,29 @@ socket.on("setConfiguration", (boxJSON) => {
   const interval = boxJSON.interval;
   const activeDays = boxJSON.activeDays;
   updateConfiguration(startHour, startMinute, endHour, endMinute, interval, activeDays);
+});
+
+socket.on("connect_error", (err) => {
+  console.log(`Can't connect to Boxlapse Server, retrying`);
+  if (loadConfig) {
+    console.log(`Using local configuration box.json`);
+    fs.readFile("/home/pi/Documents/boxlapse_agent/box.json", "utf8", (err, box) => {
+      if (err) {
+        console.error(`Can't read box.json file ${err}`);
+        return;
+      }
+      const boxJSON = JSON.parse(box);
+      console.log(boxJSON);
+      const startHour = boxJSON.startHour;
+      const startMinute = boxJSON.startMinute;
+      const endHour = boxJSON.endHour;
+      const endMinute = boxJSON.endMinute;
+      const interval = boxJSON.interval;
+      const activeDays = boxJSON.activeDays;
+      loadConfig = false;
+      updateConfiguration(startHour, startMinute, endHour, endMinute, interval, activeDays);
+    });
+  }
 });
 
 function takePicture() {
@@ -171,7 +198,7 @@ function work() {
   const seconds = now.getSeconds() * 1000;
   const minutesToWait = getMinutesToWait(actionsByDays);
   if (minutesToWait === null) {
-    return
+    return;
   }
   const msToWait = minutesToWait * 60000 - seconds;
   console.log(`minutesToWait ===> ${minutesToWait}`);
