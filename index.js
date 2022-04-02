@@ -1,7 +1,7 @@
 import fs from "fs";
 import io from "socket.io-client";
 import os, { hostname } from "os";
-import { spawn, execSync } from "child_process";
+import { spawn, exec } from "child_process";
 import { load } from "nodemon/lib/config";
 const socket = io.connect("http://boxlapse.ddns.net:4000");
 
@@ -23,11 +23,12 @@ socket.on("disconnect", () => {
   console.log("got disconnected");
 });
 
-socket.on("takePicture", () => {
+socket.on("takePicture", (url) => {
   console.log("Got Message to take picture");
-  const url = takePictureDO();
-  console.log(`URL is: ${url}`);
-  socket.emit("PictureOK", url);
+  takePictureDO((url) => {
+    console.log(`URL is: ${url}`);
+    socket.emit("PictureOK", url);
+  });
 });
 
 socket.on("setConfiguration", (boxJSON) => {
@@ -81,7 +82,7 @@ function takePicture() {
   }
 }
 
-function takePictureDO() {
+function takePictureDO(cb) {
   console.log("Taking a picture DO");
   if (hostName != "boxlapseX") {
     var d = new Date();
@@ -97,13 +98,16 @@ function takePictureDO() {
       ("0" + d.getMinutes()).slice(-2) +
       ":" +
       ("0" + d.getSeconds()).slice(-2);
-    var cmdPre = "/home/pi/takepictureDO.sh ";
-    var cmd = cmdPre.concat(datestring);
-    console.log(`runngin command => ${cmd}`);
-    var urlPre = "https://highlapse.fra1.digitaloceanspaces.com/boxlapse6/takePicture/";
-    var url = urlPre.concat(datestring, ".cr2.jpg");
-    const child = execSync(cmd);
-    return url;
+    //var cmdPre = "/home/pi/takepictureDO.sh ";
+    //var cmd = cmdPre.concat(datestring);
+    //console.log(`runngin command => ${cmd}`);
+    //var urlPre = "https://highlapse.fra1.digitaloceanspaces.com/${hostname}/takePicture/";
+    //var url = urlPre.concat(datestring, ".cr2.jpg");
+    const child = exec(`/home/pi/takepictureDO.sh ${datestring}`);
+    child.on("close", (code, signal) => {
+      console.log(`child process terminated due to receipt of signal ${signal}`);
+      cb(`https://highlapse.fra1.digitaloceanspaces.com/${hostname}/takePicture/${datestring}.cr2.jpg`);
+    });
   }
 }
 
