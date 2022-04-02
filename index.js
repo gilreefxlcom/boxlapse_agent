@@ -2,7 +2,6 @@ import fs from "fs";
 import io from "socket.io-client";
 import os, { hostname } from "os";
 import { spawn, exec } from "child_process";
-import { load } from "nodemon/lib/config";
 const socket = io.connect("http://boxlapse.ddns.net:4000");
 
 if (os.hostname() != "video") {
