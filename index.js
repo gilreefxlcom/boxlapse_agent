@@ -2,11 +2,12 @@ import fs from "fs";
 import io from "socket.io-client";
 import os, { hostname } from "os";
 import { spawn, exec } from "child_process";
+//const socket = io.connect("http://127.0.0.1:4000");
 const socket = io.connect("http://boxlapse.ddns.net:4000");
 
 if (os.hostname() != "video") {
   var hostName = os.hostname();
-} else hostName = "boxlapseX";
+} else hostName = "boxlapse15";
 
 console.log(`Started with ${hostName}`);
 
@@ -34,13 +35,13 @@ socket.on("setConfiguration", (boxJSON) => {
   console.log(`Received update from server:setConfiguration: ${boxJSON}`);
   socket.emit("setConfiguration", `setConfiguration Received by ${hostName}`);
   const content = JSON.stringify(boxJSON, null, 2);
-  fs.writeFile("/home/pi/Documents/boxlapse_agent/box.json", content, (err) => {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    console.log(`JSON was written to file`);
-  });
+  // fs.writeFile("/home/pi/Documents/boxlapse_agent/box.json", content, (err) => {
+  //   if (err) {
+  //     console.error(err);
+  //     return;
+  //   }
+  //   console.log(`JSON was written to file`);
+  // });
   loadConfig = false;
   const startHour = boxJSON.startHour;
   const startMinute = boxJSON.startMinute;
@@ -85,18 +86,7 @@ function takePictureDO(cb) {
   console.log("Taking a picture DO");
   if (hostName != "boxlapseX") {
     var d = new Date();
-    var datestring =
-      ("0" + d.getDate()).slice(-2) +
-      "-" +
-      ("0" + (d.getMonth() + 1)).slice(-2) +
-      "-" +
-      d.getFullYear() +
-      "T" +
-      ("0" + d.getHours()).slice(-2) +
-      ":" +
-      ("0" + d.getMinutes()).slice(-2) +
-      ":" +
-      ("0" + d.getSeconds()).slice(-2);
+    var datestring = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + d.getFullYear() + "T" + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2) + ":" + ("0" + d.getSeconds()).slice(-2);
     //var cmdPre = "/home/pi/takepictureDO.sh ";
     //var cmd = cmdPre.concat(datestring);
     //console.log(`runngin command => ${cmd}`);
