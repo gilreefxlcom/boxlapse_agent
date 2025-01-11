@@ -1,13 +1,14 @@
 {
-  "userId": "boxlapseX",
-  "userName": "BOXLAPSE X",
-  "interval": 30,
+  "userId": "boxlapse15",
+  "userName": "Boxlapse15",
+  "isTestDevice": false,
+  "interval": 1,
   "startHour": 0,
   "startMinute": 0,
   "endHour": 23,
   "endMinute": 55,
   "activeDays": [
-    true,
+    false,
     false,
     false,
     false,
@@ -15,5 +16,6 @@
     false,
     false
   ],
-  "connected": "Down"
+  "lastImageURL": "https://highlapse.fra1.digitaloceanspaces.com/boxlapse15/last_image/boxlapse15.jpg",
+  "connected": false
 }
